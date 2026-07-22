@@ -104,31 +104,17 @@ class ServiceFlowManager:
 
         # Generar resumen
         resumen = (
-            f"Solicitud registrada!
-
-"
-            f"Resumen de tu servicio:
-"
-            f"Nombre: {self.collected_data.get('nombre', 'N/A')}
-"
-            f"Direccion: {self.collected_data.get('direccion', 'N/A')}, {self.collected_data.get('ciudad', 'N/A')}
-"
-            f"Servicio: {self.collected_data.get('tipo_servicio', 'N/A')}
-"
-            f"Problema: {self.collected_data.get('problema', 'N/A')}
-"
-            f"Horario: {self.collected_data.get('horario', 'N/A')}
-"
-            f"Urgencia: {self.collected_data.get('urgencia', 'N/A')}
-"
-            f"Precio estimado: {precio}
-
-"
-            f"Confirmacion enviada a: {self.collected_data.get('email', 'N/A')}
-
-"
-            f"Un tecnico se pondra en contacto contigo en los proximos 30 minutos.
-"
+            f"Solicitud registrada!"
+            f"Resumen de tu servicio:"
+            f"Nombre: {self.collected_data.get('nombre', 'N/A')}"
+            f"Direccion: {self.collected_data.get('direccion', 'N/A')}, {self.collected_data.get('ciudad', 'N/A')}"
+            f"Servicio: {self.collected_data.get('tipo_servicio', 'N/A')}"
+            f"Problema: {self.collected_data.get('problema', 'N/A')}"
+            f"Horario: {self.collected_data.get('horario', 'N/A')}"
+            f"Urgencia: {self.collected_data.get('urgencia', 'N/A')}"
+            f"Precio estimado: {precio}"
+            f"Confirmacion enviada a: {self.collected_data.get('email', 'N/A')}"
+            f"Un tecnico se pondra en contacto contigo en los proximos 30 minutos."
             f"Necesitas algo mas?"
         )
 
