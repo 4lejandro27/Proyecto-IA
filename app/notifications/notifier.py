@@ -4,27 +4,38 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from app.config import settings
+import asyncio
 
 async def notify_business(lead_data: dict):
     """Envia notificacion al negocio por email y Telegram."""
-    email_task = send_email_notification(lead_data)
-    telegram_task = send_telegram_notification(lead_data)
+    print(f"[NOTIFIER] Notificando lead: {lead_data.get('nombre', 'N/A')}")
 
-    try:
-        await email_task
-    except Exception as e:
-        print(f"Error enviando email: {e}")
+    # Ejecutar ambas notificaciones en paralelo
+    tasks = []
 
-    try:
-        await telegram_task
-    except Exception as e:
-        print(f"Error enviando Telegram: {e}")
+    if settings.email_to and settings.smtp_pass and settings.smtp_pass != "placeholder_resend_key":
+        tasks.append(send_email_notification(lead_data))
+    else:
+        print("[NOTIFIER] Email no configurado, saltando...")
+
+    if settings.telegram_bot_token and settings.telegram_chat_id:
+        tasks.append(send_telegram_notification(lead_data))
+    else:
+        print("[NOTIFIER] Telegram no configurado, saltando...")
+
+    if tasks:
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                print(f"[NOTIFIER] Error en notificacion {i}: {result}")
+            else:
+                print(f"[NOTIFIER] Notificacion {i} enviada OK")
+    else:
+        print("[NOTIFIER] No hay notificaciones configuradas")
 
 async def send_email_notification(lead_data: dict):
     """Envia notificacion por email."""
-    if not settings.email_to or not settings.smtp_pass or settings.smtp_pass == "placeholder_resend_key":
-        print("Email no configurado, saltando...")
-        return
+    print(f"[EMAIL] Preparando email para {settings.email_to}")
 
     subject = f"Nuevo Lead: {lead_data.get('tipo_servicio', 'Servicio').upper()} - {lead_data.get('urgencia', 'media').upper()}"
 
@@ -60,9 +71,7 @@ async def send_email_notification(lead_data: dict):
             </tr>
             <tr style="background: #f9f9f9;">
                 <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Urgencia:</td>
-                <td style="padding: 10px; border: 1px solid #ddd; color: {'#d9534f' if lead_data.get('urgencia') == 'alta' else '#f0ad4e' if lead_data.get('urgencia') == 'media' else '#5cb85c'};">
-                    {lead_data.get('urgencia', 'N/A').upper()}
-                </td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{lead_data.get('urgencia', 'N/A').upper()}</td>
             </tr>
             <tr>
                 <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Horario:</td>
@@ -91,24 +100,19 @@ async def send_email_notification(lead_data: dict):
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "html"))
 
-    with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
-        server.starttls()
-        server.login(settings.smtp_user, settings.smtp_pass)
-        server.send_message(msg)
-
-    print(f"Email enviado a {settings.email_to}")
+    try:
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
+            server.starttls()
+            server.login(settings.smtp_user, settings.smtp_pass)
+            server.send_message(msg)
+        print(f"[EMAIL] Email enviado a {settings.email_to}")
+    except Exception as e:
+        print(f"[EMAIL] Error enviando email: {e}")
+        raise
 
 async def send_telegram_notification(lead_data: dict):
     """Envia notificacion por Telegram."""
-    if not settings.telegram_bot_token or not settings.telegram_chat_id:
-        print("Telegram no configurado, saltando...")
-        return
-
-    emoji_urgencia = {
-        "alta": "ALTA",
-        "media": "MEDIA",
-        "baja": "BAJA"
-    }
+    print(f"[TELEGRAM] Enviando a chat {settings.telegram_chat_id}")
 
     message = f"""
 NUEVO LEAD - {lead_data.get('urgencia', 'MEDIA').upper()}
@@ -128,14 +132,18 @@ Fecha: {lead_data.get('fecha_hora', 'N/A')}
 
     url = f"https://api.telegram.org/bot{settings.telegram_bot_token}/sendMessage"
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, json={
-            "chat_id": settings.telegram_chat_id,
-            "text": message,
-            "parse_mode": "Markdown"
-        })
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, json={
+                "chat_id": settings.telegram_chat_id,
+                "text": message,
+                "parse_mode": "Markdown"
+            })
 
-        if response.status_code == 200:
-            print(f"Telegram enviado al chat {settings.telegram_chat_id}")
-        else:
-            print(f"Error Telegram: {response.text}")
+            if response.status_code == 200:
+                print(f"[TELEGRAM] Enviado OK al chat {settings.telegram_chat_id}")
+            else:
+                print(f"[TELEGRAM] Error: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"[TELEGRAM] Error: {e}")
+        raise

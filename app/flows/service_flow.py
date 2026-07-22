@@ -37,20 +37,19 @@ class ServiceFlowManager:
 
         # Primera interaccion o saludo
         if len(self.conversation_history) == 1:
+            print(f"[FLOW] Primera interaccion, clasificando: {message}")
             classification = await classify_intent(message)
             self.context = classification
+            print(f"[FLOW] Clasificacion: {classification}")
 
             # Si es saludo, presentarse
             if classification.get("intencion") == "saludo":
                 response = (
-                    "Hola! Soy el asistente virtual de Servicios Express."
-
-
-                    "Estoy aqui para ayudarte a agendar tu servicio de forma rapida y sencilla."
-
-
+                    "Hola! Soy el asistente virtual de Servicios Express.\n\n"
+                    "Estoy aqui para ayudarte a agendar tu servicio de forma rapida y sencilla.\n\n"
                     "Que tipo de servicio necesitas hoy?"
                 )
+                print(f"[FLOW] Respuesta saludo: {response}")
                 return response, False, None
 
             # Si ya identifico el servicio en el primer mensaje
@@ -68,17 +67,20 @@ class ServiceFlowManager:
                     self.collected_data,
                     self.QUESTIONS[1]["question"]
                 )
+                print(f"[FLOW] Respuesta con servicio identificado: {response[:100]}...")
                 return response, False, None
 
         # Intentar extraer respuesta de la pregunta actual
         current_field = self.QUESTIONS[self.current_question_index]["field"]
         self.collected_data[current_field] = message
+        print(f"[FLOW] Dato guardado: {current_field} = {message}")
 
         # Avanzar a la siguiente pregunta
         self.current_question_index += 1
 
         # Verificar si completamos todas las preguntas
         if self.current_question_index >= len(self.QUESTIONS):
+            print("[FLOW] Flujo completo!")
             return await self._complete_flow()
 
         # Generar respuesta con la siguiente pregunta
@@ -89,6 +91,7 @@ class ServiceFlowManager:
             self.collected_data,
             next_q
         )
+        print(f"[FLOW] Siguiente pregunta: {response[:100]}...")
 
         return response, False, None
 
@@ -102,22 +105,23 @@ class ServiceFlowManager:
         precio = self._estimate_price()
         self.collected_data["precio_estimado"] = precio
 
-        # Generar resumen
+        # Generar resumen con saltos de linea reales
         resumen = (
-            f"Solicitud registrada!"
-            f"Resumen de tu servicio:"
-            f"Nombre: {self.collected_data.get('nombre', 'N/A')}"
-            f"Direccion: {self.collected_data.get('direccion', 'N/A')}, {self.collected_data.get('ciudad', 'N/A')}"
-            f"Servicio: {self.collected_data.get('tipo_servicio', 'N/A')}"
-            f"Problema: {self.collected_data.get('problema', 'N/A')}"
-            f"Horario: {self.collected_data.get('horario', 'N/A')}"
-            f"Urgencia: {self.collected_data.get('urgencia', 'N/A')}"
-            f"Precio estimado: {precio}"
-            f"Confirmacion enviada a: {self.collected_data.get('email', 'N/A')}"
-            f"Un tecnico se pondra en contacto contigo en los proximos 30 minutos."
-            f"Necesitas algo mas?"
+            "Solicitud registrada!\n\n"
+            "Resumen de tu servicio:\n"
+            f"Nombre: {self.collected_data.get('nombre', 'N/A')}\n"
+            f"Direccion: {self.collected_data.get('direccion', 'N/A')}, {self.collected_data.get('ciudad', 'N/A')}\n"
+            f"Servicio: {self.collected_data.get('tipo_servicio', 'N/A')}\n"
+            f"Problema: {self.collected_data.get('problema', 'N/A')}\n"
+            f"Horario: {self.collected_data.get('horario', 'N/A')}\n"
+            f"Urgencia: {self.collected_data.get('urgencia', 'N/A')}\n"
+            f"Precio estimado: {precio}\n\n"
+            f"Confirmacion enviada a: {self.collected_data.get('email', 'N/A')}\n"
+            "Un tecnico se pondra en contacto contigo en los proximos 30 minutos.\n\n"
+            "Necesitas algo mas?"
         )
 
+        print(f"[FLOW] Resumen final generado")
         return resumen, True, self.collected_data
 
     def _estimate_price(self):
