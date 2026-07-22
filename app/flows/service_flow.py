@@ -1,20 +1,20 @@
-"""Gestión del flujo de conversación para servicios."""
+"""Gestion del flujo de conversacion para servicios."""
 from app.ai.classifier import classify_intent, generate_response
 from datetime import datetime
 
 class ServiceFlowManager:
-    """Maneja el flujo completo de recolección de información del cliente."""
+    """Maneja el flujo completo de recoleccion de informacion del cliente."""
 
     QUESTIONS = [
-        {"field": "tipo_servicio", "question": "¿Qué tipo de servicio necesitas? (plomería, electricidad, aire acondicionado, cerrajería, limpieza, mantenimiento, etc.)"},
-        {"field": "ciudad", "question": "¿En qué ciudad te encuentras?"},
-        {"field": "direccion", "question": "¿Cuál es la dirección exacta donde necesitas el servicio?"},
-        {"field": "problema", "question": "¿Cuál es el problema o qué necesitas que hagamos?"},
-        {"field": "urgencia", "question": "¿Qué tan urgente es? (alta: emergencia, media: hoy o mañana, baja: esta semana)"},
-        {"field": "horario", "question": "¿En qué horario prefieres que visitemos? (mañana, tarde, noche, o hora específica)"},
-        {"field": "nombre", "question": "¿Cuál es tu nombre completo?"},
-        {"field": "email", "question": "¿Cuál es tu correo electrónico? (para enviarte la confirmación)"},
-        {"field": "telefono", "question": "¿Confirmas que este es tu número de WhatsApp para contactarte?"},
+        {"field": "tipo_servicio", "question": "Que tipo de servicio necesitas? (plomeria, electricidad, aire acondicionado, cerrajeria, limpieza, mantenimiento, etc.)"},
+        {"field": "ciudad", "question": "En que ciudad te encuentras?"},
+        {"field": "direccion", "question": "Cual es la direccion exacta donde necesitas el servicio?"},
+        {"field": "problema", "question": "Cual es el problema o que necesitas que hagamos?"},
+        {"field": "urgencia", "question": "Que tan urgente es? (alta: emergencia, media: hoy o manana, baja: esta semana)"},
+        {"field": "horario", "question": "En que horario prefieres que visitemos? (manana, tarde, noche, o hora especifica)"},
+        {"field": "nombre", "question": "Cual es tu nombre completo?"},
+        {"field": "email", "question": "Cual es tu correo electronico? (para enviarte la confirmacion)"},
+        {"field": "telefono", "question": "Confirmas que este es tu numero de WhatsApp para contactarte?"},
     ]
 
     def __init__(self, phone_number: str):
@@ -35,7 +35,7 @@ class ServiceFlowManager:
         """Procesa un mensaje del cliente y retorna respuesta."""
         self.conversation_history.append({"role": "user", "content": message})
 
-        # Primera interacción o saludo
+        # Primera interaccion o saludo
         if len(self.conversation_history) == 1:
             classification = await classify_intent(message)
             self.context = classification
@@ -43,17 +43,17 @@ class ServiceFlowManager:
             # Si es saludo, presentarse
             if classification.get("intencion") == "saludo":
                 response = (
-                    "¡Hola! 👋 Soy el asistente virtual de Servicios Express.
+                    "Hola! Soy el asistente virtual de Servicios Express.
 
 "
-                    "Estoy aquí para ayudarte a agendar tu servicio de forma rápida y sencilla.
+                    "Estoy aqui para ayudarte a agendar tu servicio de forma rapida y sencilla.
 
 "
-                    "¿Qué tipo de servicio necesitas hoy? 🔧"
+                    "Que tipo de servicio necesitas hoy?"
                 )
                 return response, False, None
 
-            # Si ya identificó el servicio en el primer mensaje
+            # Si ya identifico el servicio en el primer mensaje
             if classification.get("tipo_servicio") != "desconocido":
                 self.collected_data["tipo_servicio"] = classification["tipo_servicio"]
                 self.collected_data["urgencia"] = classification.get("urgencia", "media")
@@ -104,38 +104,38 @@ class ServiceFlowManager:
 
         # Generar resumen
         resumen = (
-            f"✅ ¡Solicitud registrada!
+            f"Solicitud registrada!
 
 "
-            f"📋 *Resumen de tu servicio:*
+            f"Resumen de tu servicio:
 "
-            f"👤 Nombre: {self.collected_data.get('nombre', 'N/A')}
+            f"Nombre: {self.collected_data.get('nombre', 'N/A')}
 "
-            f"📍 Dirección: {self.collected_data.get('direccion', 'N/A')}, {self.collected_data.get('ciudad', 'N/A')}
+            f"Direccion: {self.collected_data.get('direccion', 'N/A')}, {self.collected_data.get('ciudad', 'N/A')}
 "
-            f"🔧 Servicio: {self.collected_data.get('tipo_servicio', 'N/A')}
+            f"Servicio: {self.collected_data.get('tipo_servicio', 'N/A')}
 "
-            f"📝 Problema: {self.collected_data.get('problema', 'N/A')}
+            f"Problema: {self.collected_data.get('problema', 'N/A')}
 "
-            f"⏰ Horario: {self.collected_data.get('horario', 'N/A')}
+            f"Horario: {self.collected_data.get('horario', 'N/A')}
 "
-            f"🚨 Urgencia: {self.collected_data.get('urgencia', 'N/A')}
+            f"Urgencia: {self.collected_data.get('urgencia', 'N/A')}
 "
-            f"💰 Precio estimado: {precio}
+            f"Precio estimado: {precio}
 
 "
-            f"📧 Confirmación enviada a: {self.collected_data.get('email', 'N/A')}
+            f"Confirmacion enviada a: {self.collected_data.get('email', 'N/A')}
 
 "
-            f"Un técnico se pondrá en contacto contigo en los próximos 30 minutos.
+            f"Un tecnico se pondra en contacto contigo en los proximos 30 minutos.
 "
-            f"¿Necesitas algo más? 😊"
+            f"Necesitas algo mas?"
         )
 
         return resumen, True, self.collected_data
 
     def _estimate_price(self):
-        """Estima un rango de precio según el servicio."""
+        """Estima un rango de precio segun el servicio."""
         servicio = self.collected_data.get("tipo_servicio", "").lower()
         urgencia = self.collected_data.get("urgencia", "media")
 
