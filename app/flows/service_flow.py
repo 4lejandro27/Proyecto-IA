@@ -43,12 +43,12 @@ class ServiceFlowManager:
             # Si es saludo, presentarse
             if classification.get("intencion") == "saludo":
                 response = (
-                    "Hola! Soy el asistente virtual de Servicios Express.
+                    "Hola! Soy el asistente virtual de Servicios Express."
 
-"
-                    "Estoy aqui para ayudarte a agendar tu servicio de forma rapida y sencilla.
 
-"
+                    "Estoy aqui para ayudarte a agendar tu servicio de forma rapida y sencilla."
+
+
                     "Que tipo de servicio necesitas hoy?"
                 )
                 return response, False, None
